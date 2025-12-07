@@ -1,4 +1,5 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, field_validator
+from pydantic.types import FilePath
 from typing import List, Optional
 from pint import Unit, UnitRegistry, Quantity
 
@@ -45,14 +46,12 @@ class Step(BaseModel):
     Represents a single procedural step in a recipe.
     """
 
-    order: int = Field(
-        ..., ge=1, description="The sequential order of the step in the recipe."
+    description: str = Field(
+        ...,
+        min_length=1,
+        max_length=1000,
+        description="The detailed instruction for this step.",
     )
-    description: str = Field(..., description="The detailed instruction for this step.")
-
-    def __str__(self) -> str:
-        """Returns a human-readable representation of the step."""
-        return f"Step {self.order}: {self.description}"
 
 
 class Recipe(BaseModel):
@@ -80,6 +79,35 @@ class Recipe(BaseModel):
     cook_time_minutes: Optional[int] = Field(
         None, ge=0, description="Estimated cooking time in minutes."
     )
+    image_path: Optional[FilePath] = Field(
+        None, description="Path to an image file for the recipe."
+    )
+
+    @field_validator("image_path")
+    @classmethod
+    def validate_image_format(cls, v: Optional[FilePath]) -> Optional[FilePath]:
+        """
+        Validates that the image path points to a JPEG, PNG, or WebP file.
+
+        Args:
+            v: The file path to validate, or None.
+
+        Returns:
+            The validated file path, or None.
+
+        Raises:
+            ValueError: If the file extension is not .jpg, .jpeg, .png, or .webp.
+        """
+        if v is not None:
+            allowed_extensions = {".jpg", ".jpeg", ".png", ".webp"}
+            file_extension = v.suffix.lower()
+            if file_extension not in allowed_extensions:
+                raise ValueError(
+                    f"Image file must be one of types: {allowed_extensions=}. Got: {file_extension}"
+                )
+            if not v.exists():
+                raise FileNotFoundError(f"Image file does not exist: {v}")
+        return v
 
     def get_total_time(self) -> int:
         """

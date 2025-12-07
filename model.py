@@ -6,7 +6,7 @@ from pint import Unit, UnitRegistry, Quantity
 ureg = UnitRegistry()
 
 
-class Ingredient(BaseModel):
+class Ingredient(BaseModel, arbitrary_types_allowed=True):
     """
     Represents a single ingredient required for a recipe, including quantity details.
 
@@ -14,7 +14,11 @@ class Ingredient(BaseModel):
     """
 
     name: str = Field(
-        ..., description="The common name of the ingredient (e.g., 'Flour', 'Milk')."
+        ...,
+        min_length=1,
+        max_length=100,
+        pattern=r"^[a-zA-Z\s]+",
+        description="The common name of the ingredient (e.g., 'Flour', 'Milk').",
     )
     quantity: float = Field(
         ..., gt=0, description="The numerical amount of the ingredient."
@@ -26,10 +30,10 @@ class Ingredient(BaseModel):
 
     def __str__(self) -> str:
         """Returns a human-readable representation of the ingredient."""
-        unit_str = (
-            str(self.unit.units) if isinstance(self.unit, Quantity) else str(self.unit)
-        )
-        return f"{self.quantity} {unit_str} of {self.name}"
+        if self.unit == ureg.dimensionless:
+            return f"{self.quantity} {self.name}"
+        else:
+            return f"{self.quantity} {self.unit} of {self.name}"
 
     def to_quantity(self) -> Quantity:
         """Returns a Pint Quantity object combining quantity and unit."""

@@ -1,7 +1,9 @@
 from pydantic import BaseModel, Field
 from typing import List, Optional
+from pint import Unit, UnitRegistry, Quantity
 
-# --- Core Data Models (Entities) ---
+# Initialize Pint unit registry
+ureg = UnitRegistry()
 
 
 class Ingredient(BaseModel):
@@ -17,14 +19,21 @@ class Ingredient(BaseModel):
     quantity: float = Field(
         ..., gt=0, description="The numerical amount of the ingredient."
     )
-    unit: str = Field(
+    unit: Unit = Field(
         ...,
-        description="The measurement unit (e.g., 'grams', 'ml', 'cups', 'teaspoons').",
+        description="The measurement unit (e.g., 'grams', 'ml', 'cups', 'teaspoons') as a Pint unit.",
     )
 
     def __str__(self) -> str:
         """Returns a human-readable representation of the ingredient."""
-        return f"{self.quantity} {self.unit} of {self.name}"
+        unit_str = (
+            str(self.unit.units) if isinstance(self.unit, Quantity) else str(self.unit)
+        )
+        return f"{self.quantity} {unit_str} of {self.name}"
+
+    def to_quantity(self) -> Quantity:
+        """Returns a Pint Quantity object combining quantity and unit."""
+        return self.quantity * self.unit
 
 
 class Step(BaseModel):
@@ -95,32 +104,3 @@ class InventoryItem(Ingredient):
     storage_location: Optional[str] = Field(
         None, description="Where the item is stored (e.g., 'Fridge', 'Pantry')."
     )
-
-    def __str__(self) -> str:
-        """Returns a human-readable representation of the inventory item."""
-        location_info = f" ({self.storage_location})" if self.storage_location else ""
-        return f"INVENTORY: {self.quantity} {self.unit} of {self.name}{location_info}"
-
-    def is_sufficient_for(self, requirement: Ingredient) -> bool:
-        """
-        Checks if the current inventory item is sufficient for a specific recipe ingredient requirement.
-
-        Note: This is a simplified check that assumes units are compatible. Real applications
-        would require unit conversion logic.
-
-        Args:
-            requirement (Ingredient): The required ingredient and quantity.
-
-        Returns:
-            bool: True if the current quantity meets or exceeds the requirement.
-        """
-        # Simplistic check: assumes unit consistency and matching name.
-        if self.name.lower() != requirement.name.lower():
-            return False
-
-        # In a real app, this would use a UnitConverterService:
-        if self.unit.lower() != requirement.unit.lower():
-            # Log warning or attempt conversion
-            return False
-
-        return self.quantity >= requirement.quantity

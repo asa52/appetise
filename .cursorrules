@@ -1,0 +1,57 @@
+# Claude Rules for Appetise Project
+
+## Project Overview
+This is a recipe and inventory management application built with Python, using Pydantic for data validation and Pint for unit conversions.
+
+## Code Style & Standards
+
+### Python
+- Use Python 3.14+ features where appropriate
+- Follow PEP 8 style guidelines
+- Use type hints for all function parameters and return types
+- Prefer descriptive variable and function names
+- Add docstrings to classes and public methods
+
+### Pydantic Models
+- Use Pydantic BaseModel for all data models
+- Include Field descriptions for all model fields
+- Keep models focused and single-purpose
+
+### Unit Handling
+- Always use Pint for unit conversions and comparisons
+- Validate units using Pint's parse_expression
+- Handle unit compatibility checks before conversions
+- Provide clear error messages for invalid units
+
+## Best Practices
+
+### Code Organization
+- Keep models in `model.py` unless they grow too large
+- Separate concerns: data models, business logic, and I/O operations
+- Use inheritance (like InventoryItem extending Ingredient) to follow DRY principles
+
+### Error Handling
+- Use descriptive error messages
+- Handle unit conversion failures gracefully
+- Validate inputs at model boundaries
+
+### Documentation
+- Include docstrings explaining the purpose of classes and methods
+- Document complex logic, especially unit conversion logic
+- Keep README.md updated with project changes
+
+## Testing Considerations
+- Write tests for unit conversions and compatibility checks
+- Test edge cases for ingredient matching and quantity comparisons
+- Ensure models validate correctly with various input types
+
+## Dependencies
+- Prefer using existing dependencies (pydantic, pint) rather than adding new ones
+- Keep dependencies minimal and well-justified
+- Use uv for dependency management (as indicated by uv.lock)
+
+## General Guidelines
+- Maintain backward compatibility when possible
+- Consider future extensibility
+- Keep code readable and maintainable using SOLID principles
+- Follow the existing code patterns and structure
